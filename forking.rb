@@ -1,57 +1,81 @@
 require 'terminal-notifier'
 require 'uri'
-#host = 'http://paperboy.local'
-host = 'http://paperboy.jqdev.net'
+require 'net/http'
 
-def notify(host)
-  TerminalNotifier.notify('SUCCESS',
-                          title: 'Beaver Build',
-                          subtitle: 'Something',
-                          group: 'Beaver Build',
-                          open: "#{host}/view/Beaver%20Pipeline/")
-end
+require 'yaml'
+require 'json'
 
-def build_status
-end
+host = 'paperboy.local'
+# host = 'paperboy.jqdev.net'
 
-def get_json(host, query = nil)
 
-  uri_query = "#{host}/job/beaver-close/api/json?depth=1
+class Beaver
+  def initialize(host)
+    @host = host
+  end
 
-  uri_query = "#{host}api/json?depth=1&tree=views[name,jobs[name,lastSuccessfulBuild[actions[causes[upstreamBuild]],number,Projects,duration,id]]]"
+  def host
+    "http://#{jenkins_config['jenkins_api_user']}:#{jenkins_config['jenkins_api_token']}@#{@host}"
+  end
 
-  api_url = @url
+  def get_json(query = nil)
 
-  uri = URI.parse("#{api_url}#{uri_query}")
+    uri_query = "#{host}/view/Beaver/api/json"
+    form = {
+      "depth" => "2"
+    }
 
-  http               = Net::HTTP.new(uri.host, uri.port)
-  request            = Net::HTTP::Get.new(uri.request_uri)
-  request.basic_auth(@username, @api_token)
+    # uri_query = "#{host}api/json?depth=1&tree=views[name,jobs[name,lastSuccessfulBuild[actions[causes[upstreamBuild]],number,Projects,duration,id]]]"
 
-  response = http.request(request)
+    # api_url = @url
 
-  json = JSON.parse(response.body)
-end
+    uri = URI.parse(uri_query)
 
-def close_jobs(host)
+    http                = Net::HTTP.new(uri.host, uri.port)
+    response            = Net::HTTP.post_form(uri, form)
 
-  # this url gives you all info on a build phase
-  #http://paperboy.jqdev.net/view/Beaver/job/beaver-close/api/json?depth=1&pretty=true
+    # response = http.request(request)
 
-  # find what you want (maybe a SHA or something that can tie the beaver-prepare,beaver-model-specs...., beaver-close together
-  #http://paperboy.jqdev.net/view/Beaver/job/beaver-close/api/json?depth=1&pretty=true&tree=builds[buildsByBranchName[detached[revision]]]
+    json = JSON.parse(response.body)
+  end
 
-  uri_query = "#{host}/view/Beaver/job/beaver-close/api/json?depth=1&tree=builds[buildsByBranchName[detached[revision]]]
+  def notify
+    TerminalNotifier.notify('SUCCESS',
+                            title: 'Beaver Build',
+                            subtitle: 'Something',
+                            group: 'Beaver Build',
+                            open: "#{host}/view/Beaver%20Pipeline/")
+  end
 
-  puts "Close uri #{uri_query}"
-  get_json(uri_query)
+  def build_status
+  end
+
+  def close_jobs
+
+    # this url gives you all info on a build phase
+    #http://paperboy.jqdev.net/view/Beaver/job/beaver-close/api/json?depth=1&pretty=true
+
+    # find what you want (maybe a SHA or something that can tie the beaver-prepare,beaver-model-specs...., beaver-close together
+    #http://paperboy.jqdev.net/view/Beaver/job/beaver-close/api/json?depth=1&pretty=true&tree=builds[buildsByBranchName[detached[revision]]]
+
+    # uri_query = "#{host}/view/Beaver/job/beaver-close/api/json?depth=1&tree=builds[buildsByBranchName[detached[revision]]]"
+
+    # puts "Close uri #{uri_query}"
+    get_json#(uri_query)
+  end
+
+  def jenkins_config
+    @jenkins_config ||= YAML::load File.read(ENV['HOME'] + '/.beaver.yml')
+  end
 end
 
 fork do
   sleep(1)
-  close_jobs(host)
-  notify(host)
+  b = Beaver.new host
+  p b.get_json
+  b.notify
 end
+
 
 #beaver_prepare_build_number = 'http://paperboy.local/view/Beaver/api/json?depth=1&tree=jobs[name,lastBuild[number]]'
 #beaver_close_with_sha = 'http://paperboy.jqdev.net/job/beaver-close/api/json?depth=1&tree=builds[actions[buildsByBranchName[detached[revision[SHA1]]]]]'
