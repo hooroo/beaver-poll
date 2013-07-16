@@ -1,6 +1,8 @@
 require 'terminal-notifier'
 require 'uri'
 require 'net/http'
+require 'pry'
+require 'pp'
 
 require 'yaml'
 require 'json'
@@ -15,23 +17,20 @@ class Beaver
   end
 
   def host
-    "http://#{jenkins_config['jenkins_api_user']}:#{jenkins_config['jenkins_api_token']}@#{@host}"
+    "http://#{jenkins_user}:#{jenkins_token}@#{@host}"
   end
 
-  def get_json(query = nil)
+  def get_data
 
+    # This is TOO MUCH DATA... but it should be enough to derive the build chain from.
     uri_query = "#{host}/view/Beaver/api/json"
     form = {
       "depth" => "2"
     }
 
-    # uri_query = "#{host}api/json?depth=1&tree=views[name,jobs[name,lastSuccessfulBuild[actions[causes[upstreamBuild]],number,Projects,duration,id]]]"
-
-    # api_url = @url
-
     uri = URI.parse(uri_query)
 
-    http                = Net::HTTP.new(uri.host, uri.port)
+    # http                = Net::HTTP.new(uri.host, uri.port)
     response            = Net::HTTP.post_form(uri, form)
 
     # response = http.request(request)
@@ -61,20 +60,47 @@ class Beaver
     # uri_query = "#{host}/view/Beaver/job/beaver-close/api/json?depth=1&tree=builds[buildsByBranchName[detached[revision]]]"
 
     # puts "Close uri #{uri_query}"
-    get_json#(uri_query)
-  end
+    data = get_data #(uri_query)
+    jobs = data['jobs']
+
+    results = jobs.map do |job|
+      build = job['builds'].map do |build|
+        build if build['actions'].map do |actionhash|
+          actionhash if actionhash.include? 'lastBuiltRevision'
+        end.compact.first['lastBuiltRevision']['SHA1'] == '9d59998e7bf7cd4b5465749994dc16a653ec7f66'
+      end.compact.first
+
+      if build
+        {build['fullDisplayName'] => build['result']}
+      end
+    end.compact
+end
+
+  private
 
   def jenkins_config
     @jenkins_config ||= YAML::load File.read(ENV['HOME'] + '/.beaver.yml')
   end
+
+  def jenkins_user
+    jenkins_config['jenkins_api_user']
+  end
+
+  def sha
+    "9d59998e7bf7cd4b5465749994dc16a653ec7f66"
+  end
+
+  def jenkins_token
+    jenkins_config['jenkins_api_token']
+  end
 end
 
-fork do
+# fork do
   sleep(1)
   b = Beaver.new host
-  p b.get_json
+  pp b.close_jobs
   b.notify
-end
+# end
 
 
 #beaver_prepare_build_number = 'http://paperboy.local/view/Beaver/api/json?depth=1&tree=jobs[name,lastBuild[number]]'
