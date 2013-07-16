@@ -78,7 +78,8 @@ class BeaverWatcher
     if build
       {
         "build_step" => build['fullDisplayName'],
-        "result" => build['result']}
+        "result" => build['result']
+      }
     end
   end
 
@@ -87,7 +88,7 @@ class BeaverWatcher
       actionhash if actionhash.include? 'lastBuiltRevision'
     end.compact.first
 
-    if actions['lastBuiltRevision']['SHA1'] == @commit_hash
+    if actions && actions['lastBuiltRevision']['SHA1'] == @commit_hash
       build
     end
   end
