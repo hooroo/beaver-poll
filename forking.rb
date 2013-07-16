@@ -1,82 +1,96 @@
 require 'terminal-notifier'
 require 'uri'
 require 'net/http'
-require 'pry'
-require 'pp'
 
 require 'yaml'
 require 'json'
 
-host = 'paperboy.local'
-# host = 'paperboy.jqdev.net'
-
-
-class Beaver
-  def initialize(host)
-    @host = host
-  end
-
-  def host
-    "http://#{jenkins_user}:#{jenkins_token}@#{@host}"
+class BeaverWatcher
+  def initialize(commit_hash)
+    @host = 'paperboy.local'
+    @commit_hash = commit_hash
   end
 
   def get_data
-
-    # This is TOO MUCH DATA... but it should be enough to derive the build chain from.
-    uri_query = "#{host}/view/Beaver/api/json"
+    # This is TOO MUCH DATA... but at least we can derive the build chain from it. (DO NOT USE view/Beaver%20Pipeline)
+    uri_query = "#{api_host}/view/Beaver/api/json"
     form = {
       "depth" => "2"
     }
 
-    uri = URI.parse(uri_query)
-
-    # http                = Net::HTTP.new(uri.host, uri.port)
-    response            = Net::HTTP.post_form(uri, form)
-
-    # response = http.request(request)
-
-    json = JSON.parse(response.body)
+    uri      = URI.parse(uri_query)
+    response = Net::HTTP.post_form(uri, form)
+    json     = JSON.parse(response.body)
   end
 
-  def notify
-    TerminalNotifier.notify('SUCCESS',
-                            title: 'Beaver Build',
-                            subtitle: 'Something',
-                            group: 'Beaver Build',
-                            open: "#{host}/view/Beaver%20Pipeline/")
-  end
-
-  def build_status
-  end
-
-  def close_jobs
-
-    # this url gives you all info on a build phase
-    #http://paperboy.jqdev.net/view/Beaver/job/beaver-close/api/json?depth=1&pretty=true
-
-    # find what you want (maybe a SHA or something that can tie the beaver-prepare,beaver-model-specs...., beaver-close together
-    #http://paperboy.jqdev.net/view/Beaver/job/beaver-close/api/json?depth=1&pretty=true&tree=builds[buildsByBranchName[detached[revision]]]
-
-    # uri_query = "#{host}/view/Beaver/job/beaver-close/api/json?depth=1&tree=builds[buildsByBranchName[detached[revision]]]"
-
-    # puts "Close uri #{uri_query}"
-    data = get_data #(uri_query)
+  def process_data(data)
     jobs = data['jobs']
 
     results = jobs.map do |job|
-      build = job['builds'].map do |build|
-        build if build['actions'].map do |actionhash|
-          actionhash if actionhash.include? 'lastBuiltRevision'
-        end.compact.first['lastBuiltRevision']['SHA1'] == '9d59998e7bf7cd4b5465749994dc16a653ec7f66'
-      end.compact.first
-
-      if build
-        {build['fullDisplayName'] => build['result']}
-      end
+      process_job job
     end.compact
-end
+  end
+
+  def watch
+    loop do
+      data = get_data
+      results = process_data(data)
+      if is_done?(results)
+        notify_failure if is_failed?(results)
+        notify_closed if is_closed?(results)
+        break
+      end
+      sleep(20)
+    end
+  end
 
   private
+
+  def is_done?(results)
+    is_failed?(results) || is_closed?(results)
+  end
+
+  def is_failed? (results)
+    results.reduce(false) do |state, res|
+      state || res['result'] == 'FAILURE'
+    end
+  end
+
+  def is_closed?(results)
+    results.reduce(false) do |state, res|
+      state || ( !res['build_step'].index('beaver-close').nil? && res['result'] == 'SUCCESS' )
+    end
+  end
+
+  def api_host
+    "http://#{jenkins_user}:#{jenkins_token}@#{@host}"
+  end
+
+  def web_host
+    "http://#{@host}"
+  end
+
+  def process_job(job)
+    build = job['builds'].map do |build|
+      process_build(build)
+    end.compact.first
+
+    if build
+      {
+        "build_step" => build['fullDisplayName'],
+        "result" => build['result']}
+    end
+  end
+
+  def process_build(build)
+    actions = build['actions'].map do |actionhash|
+      actionhash if actionhash.include? 'lastBuiltRevision'
+    end.compact.first
+
+    if actions['lastBuiltRevision']['SHA1'] == @commit_hash
+      build
+    end
+  end
 
   def jenkins_config
     @jenkins_config ||= YAML::load File.read(ENV['HOME'] + '/.beaver.yml')
@@ -86,21 +100,38 @@ end
     jenkins_config['jenkins_api_user']
   end
 
-  def sha
-    "9d59998e7bf7cd4b5465749994dc16a653ec7f66"
-  end
-
   def jenkins_token
     jenkins_config['jenkins_api_token']
   end
+
+  def notify_failure
+    BeaverNotifier.notify(status: 'FAILURE', message: @commit_hash, link: "#{web_host}/view/Beaver%20Pipeline/")
+  end
+
+  def notify_closed
+    BeaverNotifier.notify(status: 'SUCCESS', message: @commit_hash, link: "#{web_host}/view/Beaver%20Pipeline/")
+  end
 end
 
-# fork do
+class BeaverNotifier
+  def self.notify(options)
+    status  = options.fetch(:status)
+    message = options.fetch(:message, "Something happened!")
+    link    = options.fetch(:link, "")
+
+    TerminalNotifier.notify(message,
+                            title: 'Beaver Build',
+                            subtitle: status,
+                            group: 'Beaver Build',
+                            open: link)
+  end
+end
+
+fork do
   sleep(1)
-  b = Beaver.new host
-  pp b.close_jobs
-  b.notify
-# end
+  b = BeaverWatcher.new ARGV.first
+  b.watch
+end
 
 
 #beaver_prepare_build_number = 'http://paperboy.local/view/Beaver/api/json?depth=1&tree=jobs[name,lastBuild[number]]'
