@@ -15,7 +15,7 @@ class BeaverWatcher
     # This is TOO MUCH DATA... but at least we can derive the build chain from it. (DO NOT USE view/Beaver%20Pipeline)
     uri_query = "#{api_host}/view/Beaver/api/json"
     form = {
-      "depth" => "2"
+      "tree" => "jobs[builds[fullDisplayName,result,actions[lastBuiltRevision[SHA1]]]]"
     }
 
     uri      = URI.parse(uri_query)
