@@ -1,3 +1,5 @@
+#!/usr/bin/env ruby
+
 require 'terminal-notifier'
 require 'uri'
 require 'net/http'
