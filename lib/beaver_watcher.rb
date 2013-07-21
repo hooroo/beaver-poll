@@ -26,7 +26,6 @@ class BeaverWatcher
         notify_closed if is_closed?(results)
         break
       end
-      binding.pry
       sleep(20)
     end
   end
