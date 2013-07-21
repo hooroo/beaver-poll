@@ -1,6 +1,6 @@
 # encoding utf-8
 
-require File.expand_path('../lib/beaver_watcher', __FILE__)
+require_relative 'lib/beaver_watcher'
 
 fork do
   b = BeaverWatcher.new ARGV.first

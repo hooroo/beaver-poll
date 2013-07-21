@@ -1,7 +1,7 @@
 # encoding utf-8
 #!/usr/bin/env ruby
 
-require File.expand_path('../beaver_notify', __FILE__)
+require_relative 'beaver_notifier'
 
 require 'terminal-notifier'
 require 'uri'
@@ -12,8 +12,8 @@ require 'json'
 
 class BeaverWatcher
   def initialize(commit_hash)
-    @host = 'paperboy.local'
-    #@host = 'paperboy.jqdev.net'
+    #@host = 'paperboy.local'
+    @host = 'paperboy.jqdev.net'
     @commit_hash = commit_hash
   end
 
@@ -112,11 +112,11 @@ class BeaverWatcher
   end
 
   def notify_failure
-    BeaverNotifier.notify(status: 'FAILURE', message: @commit_hash, link: "#{web_host}/view/Beaver%20Pipeline/")
+    BeaverNotifier.new.notify(status: 'FAILURE', message: @commit_hash, link: "#{web_host}/view/Beaver%20Pipeline/")
   end
 
   def notify_closed
-    BeaverNotifier.notify(status: 'SUCCESS', message: @commit_hash, link: "#{web_host}/view/Beaver%20Pipeline/")
+    BeaverNotifier.new.notify(status: 'SUCCESS', message: @commit_hash, link: "#{web_host}/view/Beaver%20Pipeline/")
   end
 end
 

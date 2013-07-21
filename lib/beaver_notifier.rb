@@ -1,7 +1,7 @@
 # encoding utf-8
 
 class BeaverNotifier
-  def self.notify(options)
+  def notify(options)
     status  = options.fetch(:status)
     message = options.fetch(:message, "Something happened!")
     link    = options.fetch(:link, "")
