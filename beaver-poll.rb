@@ -9,12 +9,12 @@ require 'json'
 
 class BeaverWatcher
   def initialize(commit_hash)
-    @host = 'paperboy.local'
+    #@host = 'paperboy.local'
+    @host = 'paperboy.jqdev.net'
     @commit_hash = commit_hash
   end
 
   def get_data
-    # This is TOO MUCH DATA... but at least we can derive the build chain from it. (DO NOT USE view/Beaver%20Pipeline)
     uri_query = "#{api_host}/view/Beaver/api/json"
     form = {
       "tree" => "jobs[builds[fullDisplayName,result,actions[lastBuiltRevision[SHA1]]]]"
@@ -22,13 +22,14 @@ class BeaverWatcher
 
     uri      = URI.parse(uri_query)
     response = Net::HTTP.post_form(uri, form)
-    json     = JSON.parse(response.body)
+
+    JSON.parse(response.body)
   end
 
   def process_data(data)
     jobs = data['jobs']
 
-    results = jobs.map do |job|
+    jobs.map do |job|
       process_job job
     end.compact
   end
