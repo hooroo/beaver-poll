@@ -1,5 +1,5 @@
 # encoding utf-8
-require_relative 'settings'
+require 'settings'
 require 'terminal-notifier'
 
 class BeaverNotifier

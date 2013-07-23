@@ -1,8 +1,8 @@
 # encoding utf-8
 #!/usr/bin/env ruby
 
-require_relative 'beaver_notifier'
-require_relative 'beaver_build'
+require 'beaver_notifier'
+require 'beaver_build'
 
 class BeaverWatcher
   def initialize(commit_hash)

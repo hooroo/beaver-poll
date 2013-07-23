@@ -2,7 +2,7 @@ require 'uri'
 require 'net/http'
 require 'json'
 
-require_relative 'settings'
+require 'settings'
 
 class JenkinsApi
   def initialize

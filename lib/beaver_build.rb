@@ -1,5 +1,5 @@
-require_relative('jenkins_api')
-require_relative('beaver_build_result')
+require 'jenkins_api'
+require 'beaver_build_result'
 
 class BeaverBuild
   attr_reader :commit_hash
