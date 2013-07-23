@@ -2,6 +2,8 @@ require_relative('jenkins_api')
 require_relative('beaver_build_result')
 
 class BeaverBuild
+  attr_reader :commit_hash
+
   def initialize(commit_hash)
     @commit_hash = commit_hash
     @api = JenkinsApi.new

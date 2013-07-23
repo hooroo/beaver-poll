@@ -9,13 +9,12 @@ require 'terminal-notifier'
 
 class BeaverWatcher
   def initialize(commit_hash)
-    @commit_hash = commit_hash
+    @build = BeaverBuild.new(commit_hash)
   end
 
   def watch
-    build = BeaverBuild.new(@commit_hash)
     loop do
-      result = build.check
+      result = @build.check
       if result.is_done?
         notify_failure if result.is_failed?
         notify_closed if result.is_closed?
@@ -36,11 +35,11 @@ class BeaverWatcher
   end
 
   def notify_failure
-    BeaverNotifier.new.notify(status: 'FAILURE', message: @commit_hash, link: "#{web_host}/view/Beaver%20Pipeline/")
+    BeaverNotifier.new.notify(status: 'FAILURE', message: @build.commit_hash, link: "#{web_host}/view/Beaver%20Pipeline/")
   end
 
   def notify_closed
-    BeaverNotifier.new.notify(status: 'SUCCESS', message: @commit_hash, link: "#{web_host}/view/Beaver%20Pipeline/")
+    BeaverNotifier.new.notify(status: 'SUCCESS', message: @build.commit_hash, link: "#{web_host}/view/Beaver%20Pipeline/")
   end
 end
 
