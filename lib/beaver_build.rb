@@ -6,10 +6,8 @@ class BeaverBuild
   end
 
   def result_for(data)
-    jobs = data['jobs']
-
     BeaverBuildResult.new(
-      jobs.map do |job|
+      data['jobs'].map do |job|
         process_job job
       end.compact
     )
