@@ -1,4 +1,5 @@
 require 'yaml'
+require 'beaver_host'
 
 class Settings
   def initialize
@@ -14,7 +15,6 @@ class Settings
   end
 
   def host
-    'paperboy.local'
-    # @host = 'paperboy.jqdev.net'
+    @settings['jenkins_api_host'] ||= BeaverHost.pick('paperboy.local', 'paperboy.jqdev.net')
   end
 end
