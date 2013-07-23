@@ -22,10 +22,10 @@ class BeaverWatcher
     build = BeaverBuild.new(@commit_hash)
     loop do
       data = get_data
-      results = build.process_data(data)
-      if build.is_done?(results)
-        notify_failure if build.is_failed?(results)
-        notify_closed if build.is_closed?(results)
+      result = build.result_for(data)
+      if result.is_done?
+        notify_failure if result.is_failed?
+        notify_closed if result.is_closed?
         break
       end
       sleep(20)
