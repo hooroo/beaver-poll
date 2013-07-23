@@ -3,12 +3,12 @@
 
 require_relative 'beaver_notifier'
 require_relative 'beaver_build'
+require_relative 'settings'
 
 require 'terminal-notifier'
 require 'uri'
 require 'net/http'
 
-require 'yaml'
 require 'json'
 
 class BeaverWatcher
@@ -47,23 +47,15 @@ class BeaverWatcher
   end
 
   def api_host
-    "http://#{jenkins_user}:#{jenkins_token}@#{@host}"
+    "http://#{settings.jenkins_user}:#{settings.jenkins_token}@#{@host}"
   end
 
   def web_host
     "http://#{@host}"
   end
 
-  def jenkins_config
-    @jenkins_config ||= YAML::load File.read(ENV['HOME'] + '/.beaver.yml')
-  end
-
-  def jenkins_user
-    jenkins_config['jenkins_api_user']
-  end
-
-  def jenkins_token
-    jenkins_config['jenkins_api_token']
+  def settings
+    @settings = Settings.new
   end
 
   def notify_failure
