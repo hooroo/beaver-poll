@@ -4,17 +4,20 @@ require_relative('beaver_build_result')
 class BeaverBuild
   def initialize(commit_hash)
     @commit_hash = commit_hash
+    @api = JenkinsApi.new
   end
 
   def check
-    BeaverBuildResult.new(
-      JenkinsApi.new.beaver_jobs['jobs'].map do |job|
-        process_job job
-      end.compact
-    )
+    BeaverBuildResult.new(process_beavers)
   end
 
-  # private
+  private
+
+  def process_beavers
+    @api.beaver_jobs['jobs'].map do |job|
+      process_job job
+    end.compact
+  end
 
   def process_job(job)
     build = job['builds'].map do |build|
