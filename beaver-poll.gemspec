@@ -4,8 +4,8 @@ Gem::Specification.new do |s|
   s.date        = '2013-07-23'
   s.summary     = "Beaver Success Notifier"
   s.description = "Polls for success or failure of Beaver Builds"
-  s.authors     = ["Brett Wilkins"]
-  s.email       = 'brett@brett.geek.nz'
+  s.authors     = ["Brett Wilkins", "James Dunwoody"]
+  s.email       = ['brett@brett.geek.nz', 'jamesdunwoody@gmail.com']
   s.files       = [
                     "lib/beaver_build.rb",
                     "lib/beaver_build_result.rb",
