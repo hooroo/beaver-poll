@@ -17,4 +17,10 @@ Gem::Specification.new do |s|
                   ]
   s.executables << 'beaver-poll'
   s.homepage    = 'https://github.com/hooroo.beaver-poll'
+
+  s.add_dependency('terminal-notifier', '~>1.4.2')
+  s.add_development_dependency('rake')
+  s.add_development_dependency('rspec')
+  s.add_development_dependency('pry')
+  s.add_development_dependency('pry-debugger')
 end
