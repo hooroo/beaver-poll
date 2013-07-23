@@ -15,7 +15,7 @@ class BeaverWatcher
   def watch
     build = BeaverBuild.new(@commit_hash)
     loop do
-      result = build.result_for
+      result = build.check
       if result.is_done?
         notify_failure if result.is_failed?
         notify_closed if result.is_closed?

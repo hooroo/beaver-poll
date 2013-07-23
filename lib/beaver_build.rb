@@ -6,7 +6,7 @@ class BeaverBuild
     @commit_hash = commit_hash
   end
 
-  def result_for
+  def check
     BeaverBuildResult.new(
       JenkinsApi.new.beaver_jobs['jobs'].map do |job|
         process_job job
