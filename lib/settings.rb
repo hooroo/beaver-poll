@@ -12,4 +12,9 @@ class Settings
   def jenkins_token
     @settings['jenkins_api_token']
   end
+
+  def host
+    'paperboy.local'
+    # @host = 'paperboy.jqdev.net'
+  end
 end

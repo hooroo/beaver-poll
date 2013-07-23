@@ -13,8 +13,6 @@ require 'json'
 
 class BeaverWatcher
   def initialize(commit_hash)
-    @host = 'paperboy.local'
-    # @host = 'paperboy.jqdev.net'
     @commit_hash = commit_hash
   end
 
@@ -47,11 +45,11 @@ class BeaverWatcher
   end
 
   def api_host
-    "http://#{settings.jenkins_user}:#{settings.jenkins_token}@#{@host}"
+    "http://#{settings.jenkins_user}:#{settings.jenkins_token}@#{settings.host}"
   end
 
   def web_host
-    "http://#{@host}"
+    "http://#{settings.host}"
   end
 
   def settings
