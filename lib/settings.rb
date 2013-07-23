@@ -1,5 +1,5 @@
 require 'yaml'
-require 'beaver_host'
+require_relative 'beaver_host'
 
 class Settings
   def initialize

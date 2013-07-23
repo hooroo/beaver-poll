@@ -7,7 +7,7 @@ class BeaverHost
 
     hosts.map do |host|
       host if self.new(host).available?
-    end.compact
+    end.compact.first
   end
 
   def initialize(hostname)
