@@ -1,7 +1,8 @@
 source "https://rubygems.org/"
 
+gemspec
+
 gem "rake"
-gem "terminal-notifier"
 gem "pry"
 gem "pry-debugger"
 

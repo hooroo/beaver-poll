@@ -1,3 +1,9 @@
+PATH
+  remote: .
+  specs:
+    beaver-poll (0.0.1)
+      terminal-notifier (~> 1.4.2)
+
 GEM
   remote: https://rubygems.org/
   specs:
@@ -34,8 +40,8 @@ PLATFORMS
   ruby
 
 DEPENDENCIES
+  beaver-poll!
   pry
   pry-debugger
   rake
   rspec
-  terminal-notifier
