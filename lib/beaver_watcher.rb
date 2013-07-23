@@ -3,13 +3,10 @@
 
 require_relative 'beaver_notifier'
 require_relative 'beaver_build'
+require_relative 'jenkins_api'
 require_relative 'settings'
 
 require 'terminal-notifier'
-require 'uri'
-require 'net/http'
-
-require 'json'
 
 class BeaverWatcher
   def initialize(commit_hash)
@@ -19,7 +16,7 @@ class BeaverWatcher
   def watch
     build = BeaverBuild.new(@commit_hash)
     loop do
-      data = get_data
+      data = JenkinsApi.new.beaver_jobs
       result = build.result_for(data)
       if result.is_done?
         notify_failure if result.is_failed?
@@ -32,28 +29,12 @@ class BeaverWatcher
 
   private
 
-  def get_data
-    uri_query = "#{api_host}/view/Beaver/api/json"
-    form = {
-      "tree" => "jobs[builds[fullDisplayName,result,actions[lastBuiltRevision[SHA1]]]]"
-    }
-
-    uri      = URI.parse(uri_query)
-    response = Net::HTTP.post_form(uri, form)
-
-    JSON.parse(response.body)
-  end
-
-  def api_host
-    "http://#{settings.jenkins_user}:#{settings.jenkins_token}@#{settings.host}"
+  def settings
+    @settings = Settings.new
   end
 
   def web_host
     "http://#{settings.host}"
-  end
-
-  def settings
-    @settings = Settings.new
   end
 
   def notify_failure
