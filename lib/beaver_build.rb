@@ -1,3 +1,4 @@
+require_relative('jenkins_api')
 require_relative('beaver_build_result')
 
 class BeaverBuild
@@ -5,9 +6,9 @@ class BeaverBuild
     @commit_hash = commit_hash
   end
 
-  def result_for(data)
+  def result_for
     BeaverBuildResult.new(
-      data['jobs'].map do |job|
+      JenkinsApi.new.beaver_jobs['jobs'].map do |job|
         process_job job
       end.compact
     )

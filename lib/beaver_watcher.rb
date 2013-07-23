@@ -3,7 +3,6 @@
 
 require_relative 'beaver_notifier'
 require_relative 'beaver_build'
-require_relative 'jenkins_api'
 require_relative 'settings'
 
 require 'terminal-notifier'
@@ -16,8 +15,7 @@ class BeaverWatcher
   def watch
     build = BeaverBuild.new(@commit_hash)
     loop do
-      data = JenkinsApi.new.beaver_jobs
-      result = build.result_for(data)
+      result = build.result_for
       if result.is_done?
         notify_failure if result.is_failed?
         notify_closed if result.is_closed?
