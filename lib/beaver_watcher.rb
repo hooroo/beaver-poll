@@ -2,6 +2,7 @@
 #!/usr/bin/env ruby
 
 require_relative 'beaver_notifier'
+require_relative 'beaver_build'
 
 require 'terminal-notifier'
 require 'uri'
@@ -12,18 +13,19 @@ require 'json'
 
 class BeaverWatcher
   def initialize(commit_hash)
-    #@host = 'paperboy.local'
-    @host = 'paperboy.jqdev.net'
+    @host = 'paperboy.local'
+    # @host = 'paperboy.jqdev.net'
     @commit_hash = commit_hash
   end
 
   def watch
+    build = BeaverBuild.new(@commit_hash)
     loop do
       data = get_data
-      results = process_data(data)
-      if is_done?(results)
-        notify_failure if is_failed?(results)
-        notify_closed if is_closed?(results)
+      results = build.process_data(data)
+      if build.is_done?(results)
+        notify_failure if build.is_failed?(results)
+        notify_closed if build.is_closed?(results)
         break
       end
       sleep(20)
@@ -44,59 +46,12 @@ class BeaverWatcher
     JSON.parse(response.body)
   end
 
-  def process_data(data)
-    jobs = data['jobs']
-
-    jobs.map do |job|
-      process_job job
-    end.compact
-  end
-
-  def is_done?(results)
-    is_failed?(results) || is_closed?(results)
-  end
-
-  def is_failed? (results)
-    results.reduce(false) do |state, res|
-      state || res['result'] == 'FAILURE'
-    end
-  end
-
-  def is_closed?(results)
-    results.reduce(false) do |state, res|
-      state || ( !res['build_step'].index('beaver-close').nil? && res['result'] == 'SUCCESS' )
-    end
-  end
-
   def api_host
     "http://#{jenkins_user}:#{jenkins_token}@#{@host}"
   end
 
   def web_host
     "http://#{@host}"
-  end
-
-  def process_job(job)
-    build = job['builds'].map do |build|
-      process_build(build)
-    end.compact.first
-
-    if build
-      {
-        "build_step" => build['fullDisplayName'],
-        "result" => build['result']
-      }
-    end
-  end
-
-  def process_build(build)
-    actions = build['actions'].map do |actionhash|
-      actionhash if actionhash.include? 'lastBuiltRevision'
-    end.compact.first
-
-    if actions && actions['lastBuiltRevision']['SHA1'] == @commit_hash
-      build
-    end
   end
 
   def jenkins_config
