@@ -3,7 +3,5 @@
 
 require 'beaver_watcher'
 
-fork do
-  b = BeaverWatcher.new ARGV.first
-  b.watch
-end
+b = BeaverWatcher.new ARGV.first
+b.watch

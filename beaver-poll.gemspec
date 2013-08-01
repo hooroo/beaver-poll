@@ -1,6 +1,6 @@
 Gem::Specification.new do |s|
   s.name        = 'beaver-poll'
-  s.version     = '0.0.2'
+  s.version     = '0.0.3'
   s.date        = '2013-07-23'
   s.summary     = "Beaver Success Notifier"
   s.description = "Polls for success or failure of Beaver Builds"
