@@ -1,9 +1,4 @@
 #!/usr/bin/env ruby
 # encoding utf-8
 
-require 'beaver_watcher'
-
-fork do
-  b = BeaverWatcher.new ARGV.first
-  b.watch
-end
+spawn("ruby lib/beaver_poll.rb #{ARGV.first}", in: :close, out: :close, err: :close)
